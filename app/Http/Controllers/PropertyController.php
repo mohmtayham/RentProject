@@ -29,6 +29,16 @@ public function filterBymonthly_rent(Request $request)
     return PropertyResource::collection($properties);
 }
 
+public function make_ave_rationg($propertyId, Request $request)
+{
+    $property = Property::findOrFail($propertyId);
+    $newRating = $request->input('rating');
 
+    // Simple average calculation (you might want to store number of ratings for a better average)
+    $property->avg_rating = ($property->avg_rating + $newRating) / 2;
+    $property->save();
+
+    return new PropertyResource($property);
+}
 
 }

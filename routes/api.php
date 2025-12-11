@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\ApplicationController;
+use App\Http\Controllers\ContractController;
 use App\Http\Controllers\PropertyController;
+use App\Http\Controllers\RentalContractController;
 use App\Http\Controllers\UserController;
 use App\Models\Property;
 use Illuminate\Http\Request;
@@ -14,21 +16,29 @@ Route::post('/login', [UserController::class, 'login']);
 // Protected routes (require Sanctum token)
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [UserController::class, 'logout']);
+    // Convenience route matching your Postman URL
+  //  Route::post('/addcontract', [RentalContractController::class, 'store']);
     Route::get('user2', [UserController::class,'GetUser']);
     Route::get('user', [UserController::class, 'show']);
     Route::get('users', [UserController::class, 'index']);
+  // Public to any authenticated user: basic info routes kept here
+
+  // Landlord-only routes
+  Route::middleware(['\\App\\Http\\Middleware\\RoleMiddleware:landlord'])->group(function () {
     Route::get('properties', [PropertyController::class, 'index']);
+  });
+
+  // Tenant-only routes
+  Route::middleware(['\\App\\Http\\Middleware\\RoleMiddleware:tenant'])->group(function () {
     Route::get('applications', [ApplicationController::class, 'index']);
+  });
 
+  // Routes shared between landlord and tenant
+  Route::middleware(['\\App\\Http\\Middleware\\RoleMiddleware:landlord|tenant'])->group(function () {
+    // Route::get('contracts', [ContractController::class, 'index']);
+    Route::post('addcontract', [ContractController::class, 'store']);
+    Route::post('addcontractWithoutConflict', [ContractController::class, 'addWithoutConflictInreservations']);
+  });
 
-    // Your other protected resources
-    Route::apiResource('properties', PropertyController::class);
-    Route::apiResource('tenants', \App\Http\Controllers\TenantController::class);
-    Route::apiResource('admins', \App\Http\Controllers\AdminController::class);
-    Route::apiResource('landlords', \App\Http\Controllers\LandlordController::class);
-    Route::apiResource('applications', \App\Http\Controllers\ApplicationController::class);
-    Route::apiResource('rental-contracts', \App\Http\Controllers\RentalContractController::class);
-    Route::apiResource('favorites', \App\Http\Controllers\FavoriteController::class);
-    Route::apiResource('messages', \App\Http\Controllers\MessageController::class);
-    Route::apiResource('contracts', \App\Http\Controllers\ContractController::class);
+ //   Route::apiResource('contracts', \App\Http\Controllers\ContractController::class);
 });

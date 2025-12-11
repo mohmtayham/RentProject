@@ -8,6 +8,9 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Admin;
+use App\Models\Landlord;
+use App\Models\Tenant;
 
 class UserController extends Controller
 {
@@ -31,10 +34,26 @@ class UserController extends Controller
             'user_type' => $request->user_type,
         ]);
 
-        // Return JSON response
+        // Create related profile record for the chosen user_type
+        switch ($request->user_type) {
+            case 'admin':
+                Admin::create(['user_id' => $user->id]);
+                break;
+            case 'landlord':
+                Landlord::create(['user_id' => $user->id]);
+                break;
+            case 'tenant':
+                Tenant::create(['user_id' => $user->id]);
+                break;
+        }
+
+        // create token immediately
+        $token = $user->createToken('auth_token')->plainTextToken;
+
         return response()->json([
             'message' => 'User registered successfully',
-            'user' => $user
+            'user' => $user->load($user->user_type),
+            'token' => $token
         ], 201);
     }
 
@@ -53,13 +72,15 @@ class UserController extends Controller
 
     $user = User::where('email', $request->email)->firstOrFail();
 
-    $token = $user->createToken('auth_Token')->plainTextToken;
+    // revoke previous tokens and issue a new one
+    $user->tokens()->delete();
+    $token = $user->createToken('auth_token')->plainTextToken;
 
     return response()->json([
         'message' => 'Login successful',
-        'user' => $user,
+        'user' => $user->load($user->user_type),
         'token' => $token
-    ], 200); 
+    ], 200);
 }
 
     public function logout(Request $request)
@@ -78,7 +99,7 @@ class UserController extends Controller
 }
 public function show(Request $request)
 {
-    return new UserResourcev($request->user());
+    return new UserResourcev($request->user()->load($request->user()->user_type));
 }
 
 public function index()

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->boolean('is_available')->default(true);
             $table->string('note')->nullable();
+            $table->integer('avg_rating')->default(0);
             $table->string('photo')->nullable();
             $table->timestamps();
         });

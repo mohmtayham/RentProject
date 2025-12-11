@@ -2,6 +2,7 @@
 namespace Database\Factories;
 
 use App\Models\Application;
+use App\Models\Landlord;
 use App\Models\Property;
 use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -14,6 +15,7 @@ class RentalContractFactory extends Factory
         
         return [
             'application_id' => Application::factory(),
+            'landlord_id' => Landlord::factory(),
             'property_id' => Property::factory(),
             'tenant_id' => Tenant::factory(),
             'start_date' => $startDate,

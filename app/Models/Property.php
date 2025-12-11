@@ -11,11 +11,12 @@ class Property extends Model
     use HasFactory;
     protected $fillable = [
         'address', 'city', 'state', 'square_feet', 'monthly_rent',
-        'description', 'is_available', 'note', 'photo', 'landlord_id'
+        'description', 'is_available', 'note', 'photo', 'landlord_id','avg_rating'
     ];
 
     protected $casts = [
         'is_available' => 'boolean',
+        'avg_rating' => 'decimal:2',
     ];
 
     public function landlord(): BelongsTo

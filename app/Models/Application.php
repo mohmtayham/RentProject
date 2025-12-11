@@ -21,6 +21,7 @@ class Application extends Model
         'admin_id', 
         'status', 
         'submitted_at', 
+       
         'notes'
     ];
 

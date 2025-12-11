@@ -11,6 +11,7 @@ return new class extends Migration
      Schema::create('rental_contracts', function (Blueprint $table) {
     $table->id();
     $table->foreignId('application_id')->constrained()->cascadeOnDelete();
+    $table->foreignId('landlord_id')->constrained()->cascadeOnDelete();
     $table->foreignId('property_id')->constrained()->cascadeOnDelete();
     $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
     $table->date('start_date');
@@ -18,6 +19,7 @@ return new class extends Migration
     $table->decimal('monthly_rent', 10, 2);
     $table->integer('rate');
     $table->enum('status', ['draft', 'active', 'expired', 'terminated'])->default('draft');
+   
     $table->timestamp('signed_at')->nullable();
     $table->timestamps();
 });

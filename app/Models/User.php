@@ -46,4 +46,48 @@ class User extends Authenticatable
     {
         return $this->hasOne(Admin::class);
     }
+ 
+    // Dynamic profile relationship accessor
+    public function profile()
+    {
+        return $this->{$this->user_type}();
+    }
+
+    // Role helpers
+    public function hasRole($role)
+    {
+        return $this->user_type === $role;
+    }
+
+    public function isAdmin()
+    {
+        return $this->hasRole('admin');
+    }
+
+    public function isLandlord()
+    {
+        return $this->hasRole('landlord');
+    }
+
+    public function isTenant()
+    {
+        return $this->hasRole('tenant');
+    }
+
+    // Optionally keep related profile in sync when changing user_type
+    protected static function booted()
+    {
+        static::updated(function ($user) {
+            if ($user->isDirty('user_type')) {
+                $old = $user->getOriginal('user_type');
+                $new = $user->user_type;
+                if ($old && $user->{$old}) {
+                    try { $user->{$old}->delete(); } catch (\Throwable $e) {}
+                }
+                if ($new && ! $user->{$new}) {
+                    try { $user->{$new}()->create([]); } catch (\Throwable $e) {}
+                }
+            }
+        });
+    }
 }
