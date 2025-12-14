@@ -13,7 +13,7 @@ class ApplicationResource extends JsonResource
             'id' => $this->id,
             'tenant' => $this->tenant_id,
             'property_id' => $this->property_id,
-            'admin_id' => $this->admin_id,
+            'landlord_id' => $this->landlord_id,
             'status' => $this->status,
             'submitted_at' => $this->submitted_at,
             'notes' => $this->notes,

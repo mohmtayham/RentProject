@@ -1,44 +1,140 @@
 <?php
 
-use App\Http\Controllers\ApplicationController;
-use App\Http\Controllers\ContractController;
-use App\Http\Controllers\PropertyController;
-use App\Http\Controllers\RentalContractController;
-use App\Http\Controllers\UserController;
-use App\Models\Property;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| These routes are loaded by the RouteServiceProvider within a group which
+| is assigned the "api" middleware group. Enjoy building your API!
+|
+*/
+
+
 // Public routes (no authentication required)
-Route::post('/register', [UserController::class, 'register']);
-Route::post('/login', [UserController::class, 'login']);
+
+    Route::post('/login', [App\Http\Controllers\UserController::class, 'login']);
+    Route::post('/register', [App\Http\Controllers\UserController::class, 'register']);
+    // OTP routes
+    Route::post('/otp/send', [App\Http\Controllers\Auth\OtpController::class, 'sendOtp']);
+    Route::post('/otp/verify', [App\Http\Controllers\Auth\OtpController::class, 'verifyOtp']);
+    
+    // Admin auth routes
+    Route::post('/admin/register', [App\Http\Controllers\AdminController::class, 'registerAdmin']);
+    Route::post('/admin/login', [App\Http\Controllers\AdminController::class, 'loginAdmin']);
+
 
 // Protected routes (require Sanctum token)
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [UserController::class, 'logout']);
-    // Convenience route matching your Postman URL
-  //  Route::post('/addcontract', [RentalContractController::class, 'store']);
-    Route::get('user2', [UserController::class,'GetUser']);
-    Route::get('user', [UserController::class, 'show']);
-    Route::get('users', [UserController::class, 'index']);
-  // Public to any authenticated user: basic info routes kept here
+    // Auth routes
+    Route::post('/logout', [App\Http\Controllers\UserController::class, 'logout']);
+    Route::post('/admin/logout', [App\Http\Controllers\AdminController::class, 'logoutAdmin']);
+    
+    // User routes
+   
+        Route::get('/me', [App\Http\Controllers\UserController::class, 'show']);
+        Route::get('/', [App\Http\Controllers\UserController::class, 'index']);
+        Route::put('/{id}', [App\Http\Controllers\UserController::class, 'update']);
+        Route::delete('/{id}', [App\Http\Controllers\UserController::class, 'destroy']);
+        
+        // User profile routes
+        Route::put('/{id}/profile-image', [App\Http\Controllers\UserController::class, 'addimage']);
+        Route::put('/{id}/id-photo', [App\Http\Controllers\UserController::class, 'editIdPhoto']);
+        Route::put('/{id}/photo', [App\Http\Controllers\UserController::class, 'editPhoto']);
+        
+        // User favorites
+        Route::prefix('/favorites')->group(function () {
+            Route::post('/properties/{propertyId}', [App\Http\Controllers\UserController::class, 'addPropertyToFavorites']);
+            Route::get('/properties', [App\Http\Controllers\UserController::class, 'getFavoriteProperties']);
+            Route::delete('/properties/{propertyId}', [App\Http\Controllers\UserController::class, 'removePropertyFromFavorites']);
+        });
+    
+    
+    // Property routes
+    Route::prefix('properties')->group(function () {
+        Route::get('/', [App\Http\Controllers\PropertyController::class, 'index']);
+        Route::get('/available', [App\Http\Controllers\PropertyController::class, 'showAvillableProperties']);
+        Route::get('/city/{city}', [App\Http\Controllers\PropertyController::class, 'filterBycity']);
+        Route::get('/price-range', [App\Http\Controllers\PropertyController::class, 'filterBymonthly_rent']);
+        
+        Route::get('/{id}', [App\Http\Controllers\PropertyController::class, 'showPropertyDetails']);
+        Route::put('/{id}', [App\Http\Controllers\PropertyController::class, 'updatePropertyDetails']);
+        Route::delete('/{id}', [App\Http\Controllers\PropertyController::class, 'destroy']);
+        
+        // Property ratings
+        Route::put('/{propertyId}/rating', [App\Http\Controllers\PropertyController::class, 'make_ave_rationg']);
+    });
+    
+    // Application routes
+    Route::prefix('applications')->group(function () {
+        Route::get('/', [App\Http\Controllers\ApplicationController::class, 'index']);
+        Route::post('/', [App\Http\Controllers\ApplicationController::class, 'store']);
+        
+        Route::middleware(['role:landlord|admin'])->group(function () {
+            Route::put('/{id}/status', [App\Http\Controllers\ApplicationController::class, 'updateStatus']);
+        });
+    });
+    
+    // Contract routes
+   
+        Route::get('/', [App\Http\Controllers\ContractController::class, 'index']);
+        
+        Route::middleware(['role:landlord|tenant'])->group(function () {
+            Route::post('/', [App\Http\Controllers\ContractController::class, 'store']);
+            Route::post('/without-conflict', [App\Http\Controllers\ContractController::class, 'addWithoutConflictInreservations']);
+            Route::post('/with-approval', [App\Http\Controllers\ContractController::class, 'addWithApprovalFromLandlord']);
+            
+            Route::get('/{id}', [App\Http\Controllers\ContractController::class, 'show']);
+            Route::put('/{id}', [App\Http\Controllers\ContractController::class, 'edit']);
+            
+            // Contract ratings
+            Route::put('/{id}/rate', [
+                App\Http\Controllers\ContractController::class, 'addrate'
+            ])->name('contracts.addrate');
+            
+            // Contract status
+            Route::put('/{id}/status', [
+                App\Http\Controllers\ContractController::class, 'editContractstatus'
+            ])->name('contracts.status');
+        });
+        
+        Route::middleware(['role:tenant'])->group(function () {
+            Route::delete('/{id}', [App\Http\Controllers\ContractController::class, 'destroyWithApprovalFromTenant']);
+        });
+    
+    
+    // Message routes
+    Route::prefix('messages')->group(function () {
+        Route::get('/', [App\Http\Controllers\MessageController::class, 'index']);
+        Route::post('/', [App\Http\Controllers\MessageController::class, 'store']);
+        Route::get('/users/{userId}', [App\Http\Controllers\MessageController::class, 'showUserMessages']);
+    });
+    
+    // Admin only routes
+   
+        // User management
+        Route::get('/users', [App\Http\Controllers\AdminController::class, 'getAllUsers']);
+        Route::patch('/users/{id}/approve', [App\Http\Controllers\AdminController::class, 'approveUser']);
+        Route::patch('/users/{id}/reject', [App\Http\Controllers\AdminController::class, 'rejectUser']);
+       Route::patch('/users/{id}', [App\Http\Controllers\AdminController::class, 'updateUser']);
+        Route::delete('/users/{id}', [App\Http\Controllers\AdminController::class, 'deleteUser']);
+        
+        // Application management
+        Route::get('/applications', [App\Http\Controllers\ApplicationController::class, 'index']);
 
-  // Landlord-only routes
-  Route::middleware(['\\App\\Http\\Middleware\\RoleMiddleware:landlord'])->group(function () {
-    Route::get('properties', [PropertyController::class, 'index']);
-  });
-
-  // Tenant-only routes
-  Route::middleware(['\\App\\Http\\Middleware\\RoleMiddleware:tenant'])->group(function () {
-    Route::get('applications', [ApplicationController::class, 'index']);
-  });
-
-  // Routes shared between landlord and tenant
-  Route::middleware(['\\App\\Http\\Middleware\\RoleMiddleware:landlord|tenant'])->group(function () {
-    // Route::get('contracts', [ContractController::class, 'index']);
-    Route::post('addcontract', [ContractController::class, 'store']);
-    Route::post('addcontractWithoutConflict', [ContractController::class, 'addWithoutConflictInreservations']);
-  });
-
- //   Route::apiResource('contracts', \App\Http\Controllers\ContractController::class);
+    
+    
+    // Landlord only routes
+    
+        // Application decisions
+        Route::patch('/applications/{id}/approve', [App\Http\Controllers\LandlordController::class, 'approvecontract']);
+        Route::patch('/applications/{id}/reject', [App\Http\Controllers\LandlordController::class, 'rejectcontract']);
+        Route::patch('/applications/{id}/under-review', [App\Http\Controllers\LandlordController::class, 'underreviewcontract']);
+        
+        // Property management
+        Route::get('/properties', [App\Http\Controllers\PropertyController::class, 'index']);
+    
 });

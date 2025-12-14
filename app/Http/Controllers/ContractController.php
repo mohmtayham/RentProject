@@ -109,6 +109,33 @@ public function show(Request $request)
     return new RentalContractResource($contract);
 }
 
+public function addrate(Request $request, $id)
+{
+    $request->validate([
+        'rate' => 'required|integer|min:1|max:5',
+    ]);
+
+    $rentalContract = RentalContract::findOrFail($id);
+    $rentalContract->rate = $request->rate;
+    $rentalContract->save();
+
+    return new RentalContractResource($rentalContract);
+}
+
+
+public function editrate(Request $request, $id)
+{
+    $request->validate([
+        'rate' => 'required|integer|min:1|max:5',
+    ]);
+
+    $rentalContract = RentalContract::findOrFail($id);
+    $rentalContract->rate = $request->rate;
+    $rentalContract->save();
+
+    return new RentalContractResource($rentalContract);
+}
+
 
 public function destroyWithApprovalFromTenant(RentalContract $rentalContract)
 {
@@ -119,6 +146,49 @@ public function destroyWithApprovalFromTenant(RentalContract $rentalContract)
 
 
 }
+public function editContractstatus(Request $request)
+{
+$request->validate([
+    'status' => 'required|in:draft,active,expired,terminated'
+]);
+$rentalContract = RentalContract::findOrFail($request->id);
+$rentalContract->status = $request->status;
+$rentalContract->save();
+return new RentalContractResource($rentalContract);
+
+
+}
+//'draft', 'active', 'expired', 'terminated'
+
+
+public function addWithApprovalFromLandlord(Request $request)
+{
+    // if(Auth::user()->role !== 'landlord'){
+    //     return response()->json(['message' => 'Only landlords can create contracts.'], 403);
+    // }
+
+    $validated = $request->validate([
+        'application_id' => 'required|exists:applications,id',
+        'property_id' => 'required|exists:properties,id',
+        'tenant_id' => 'required|exists:users,id',
+        'landlord_id' => 'required|exists:users,id',
+        'start_date' => 'required|date',
+        'end_date' => 'required|date|after:start_date',
+        'monthly_rent' => 'required|numeric',
+        'rate' => 'nullable|integer|min:1|max:5',
+        'status' => 'required|in:active,terminated,pending',
+    ]);
+
+    $contract = RentalContract::create($validated);
+
+    return new RentalContractResource($contract);   
+}
+
+
+
+
+
+
 }
 // if(Auth::user()->role !== 'tenant'){
 //     return response()->json(['message' => 'Only tenants can request contract edits.'], 403);

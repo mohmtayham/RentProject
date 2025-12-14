@@ -14,7 +14,7 @@ public function tenant()
         return $this->belongsTo(Tenant::class);
     }
 
-    public function property()
+    public function favoriteProperties()
     {
         return $this->belongsTo(Property::class);
     }

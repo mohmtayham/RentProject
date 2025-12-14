@@ -17,7 +17,11 @@ class User extends Authenticatable
         'email',
         'password',
         'phone_number',
-        'user_type'
+        'user_type',
+        'photo',
+        'id_photo',
+        'address',
+        'status',
     ];
    
 
@@ -47,7 +51,7 @@ class User extends Authenticatable
         return $this->hasOne(Admin::class);
     }
  
-    // Dynamic profile relationship accessor
+   
     public function profile()
     {
         return $this->{$this->user_type}();
@@ -90,4 +94,15 @@ class User extends Authenticatable
             }
         });
     }
+
+    public function isApproved()
+{
+    return $this->status === 'approved';
+}
+
+public function approver()
+{
+    return $this->belongsTo(User::class, 'approved_by');
+}
+
 }

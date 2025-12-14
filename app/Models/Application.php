@@ -18,7 +18,7 @@ class Application extends Model
     protected $fillable = [
         'tenant_id', 
         'property_id', 
-        'admin_id', 
+        'landlord_id', 
         'status', 
         'submitted_at', 
        
@@ -46,8 +46,8 @@ class Application extends Model
     }
 
   
-    public function admin(): BelongsTo
+    public function landlord(): BelongsTo
     {
-        return $this->belongsTo(Admin::class);
+        return $this->belongsTo(Landlord::class);
     }
 }

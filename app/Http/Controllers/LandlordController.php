@@ -5,35 +5,63 @@ namespace App\Http\Controllers;
 use App\Models\Landlord;
 use App\Http\Requests\StoreLandlordRequest;
 use App\Http\Requests\UpdateLandlordRequest;
+use App\Models\Application;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class LandlordController extends Controller
 {
-    public function index()
+ public function approvecontract(Request $request, $id)
     {
-        return Landlord::paginate(20);
+        
+
+       $application=Application::findOrFail($id); 
+        if ($application->landlord_id !== Auth::id()) { 
+            return response()->json(['error' => 'Unauthorized'], 403);
+             if (!in_array($application->status, ['pending', 'under_review'])) {
+            return response()->json(['error' => 'Cannot modify a finalized application'], 400);
+        }
+        }  
+       $application->status='approved';
+       $application->save();
+
+        return response()->json(['message' => 'the contract has been approved successfully']);
+    }
+   // $table->enum('status', ['pending', 'approved', 'rejected', 'under_review'])->default('pending');
+
+public function rejectcontract(Request $request, $id)
+    {
+       $application=Application::findOrFail($id);   
+         if ($application->landlord_id !== Auth::id()) { 
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }  
+         if (!in_array($application->status, ['pending', 'under_review'])) {
+            return response()->json(['error' => 'Cannot modify a finalized application'], 400);
+        }
+ $application->contract_status = 'rejected';
+       $application->save();
+
+       
+        
+
+        return response()->json(['message' => 'the contract has been rejected successfully']);
+    }
+public function underreviewcontract(Request $request, $id)
+    {
+       $application=Application::findOrFail($id);   
+         if ($application->landlord_id !== Auth::id()) { 
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }  
+         if (!in_array($application->status, ['pending', 'under_review'])) {
+            return response()->json(['error' => 'Cannot modify a finalized application'], 400);
+        }
+ $application->contract_status = 'under_review';
+       $application->save();
+
+       
+        
+
+        return response()->json(['message' => 'the contract is under review now']);
     }
 
-    public function show(Landlord $landlord)
-    {
-        return $landlord;
-    }
-
-    public function store(StoreLandlordRequest $request)
-    {
-        $landlord = Landlord::create($request->validated());
-        return response()->json($landlord, 201);
-    }
-
-    public function update(UpdateLandlordRequest $request, Landlord $landlord)
-    {
-        $landlord->fill($request->validated());
-        $landlord->save();
-        return $landlord;
-    }
-
-    public function destroy(Landlord $landlord)
-    {
-        $landlord->delete();
-        return response()->noContent();
-    }
 }

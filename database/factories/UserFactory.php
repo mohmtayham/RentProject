@@ -17,6 +17,12 @@ class UserFactory extends Factory
             
             'user_type' => $this->faker->randomElement(['tenant', 'landlord', 'admin']),
             'phone_number' => $this->faker->phoneNumber(),
+            'photo' => $this->faker->optional()->imageUrl(),
+            'id_photo' => $this->faker->optional()->imageUrl(),
+            'address' => $this->faker->optional()->address(),
+            'status' => $this->faker->randomElement(['approve', 'reject', 'pending']),
+
+
           
         ];
     }

@@ -18,7 +18,12 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->enum('user_type', ['tenant', 'landlord', 'admin'])->default('tenant');
+            $table->string('address')->nullable();
             $table->string('phone_number')->nullable();
+            $table->string('photo')->nullable();
+            $table->string('id_photo')->nullable();
+            $table->enum('status',[ 'approve', 'reject', 'pending'])->default('pending');
+            
            
            
             $table->rememberToken();

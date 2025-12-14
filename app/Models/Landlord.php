@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Landlord extends Model
 {
     use HasFactory;
-    protected $fillable = ['total_properties_managed'];
+    protected $fillable = ['user_id', 'total_properties_managed'];
 
     // RELATIONSHIPS
     public function user(): BelongsTo

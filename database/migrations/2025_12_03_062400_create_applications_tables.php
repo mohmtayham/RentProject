@@ -10,11 +10,11 @@ return new class extends Migration
     {
      Schema::create('applications', function (Blueprint $table) {
     $table->id();
-    $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
-    $table->foreignId('property_id')->constrained()->cascadeOnDelete();
-    $table->foreignId('admin_id')->nullable()->constrained('admins')->nullOnDelete();
+    $table->foreignId('tenant_id')->constrained('tenants')->cascadeOnDelete();
+    $table->foreignId('property_id')->constrained('properties')->cascadeOnDelete();
+    $table->foreignId('landlord_id')->nullable()->constrained('landlords')->nullOnDelete();
     $table->enum('status', ['pending', 'approved', 'rejected', 'under_review'])->default('pending');
-    $table->timestamp('submitted_at')->useCurrent();
+    $table->timestamp('submitted_at')->nullable();
     $table->text('notes')->nullable();
     $table->timestamps();
 });

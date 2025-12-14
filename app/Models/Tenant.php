@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Tenant extends Model
 {
     use HasFactory;
-    protected $fillable = ['special_requirements', 'marital_status', 'emergency_contact_phone'];
+    protected $fillable = ['user_id', 'special_requirements', 'marital_status', 'emergency_contact_phone'];
 
     // RELATIONSHIPS
     public function user(): BelongsTo

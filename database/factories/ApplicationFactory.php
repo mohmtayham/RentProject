@@ -4,6 +4,7 @@ namespace Database\Factories;
 use App\Models\Tenant;
 use App\Models\Property;
 use App\Models\Admin;
+use App\Models\Landlord;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ApplicationFactory extends Factory
@@ -19,7 +20,7 @@ class ApplicationFactory extends Factory
         return [
             'tenant_id' => Tenant::factory(),
             'property_id' => Property::factory(),
-            'admin_id' => $this->faker->optional()->passthrough(Admin::factory()),
+            'landlord_id' => $this->faker->optional()->passthrough(Landlord::factory()),
             'status' => $this->faker->randomElement(['pending', 'approved', 'rejected', 'under_review']),
             'submitted_at' => now(),
             'notes' => $this->faker->optional()->paragraph(),

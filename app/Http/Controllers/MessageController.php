@@ -2,38 +2,40 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Message;
-use App\Http\Requests\StoreMessageRequest;
-use App\Http\Requests\UpdateMessageRequest;
+use App\Http\Resources\MessageResource; // 
+use App\Models\Message; //
+use Illuminate\Http\Request; // 
 
 class MessageController extends Controller
 {
-    public function index()
+    public function store(Request $request): MessageResource
     {
-        return Message::paginate(20);
+        $request->validate([
+            'sender_id' => 'required|integer|exists:users,id',
+            'receiver_id' => 'required|integer|exists:users,id',
+            'content' => 'required|string',
+        ]);
+        
+        $message = Message::create([
+            'sender_id' => $request->sender_id,
+            'receiver_id' => $request->receiver_id,
+            'content' => $request->body,
+        ]);
+        
+        return new MessageResource($message);
     }
 
-    public function show(Message $message)
+    public function index(): \Illuminate\Http\Resources\Json\AnonymousResourceCollection
     {
-        return $message;
+        $messages = Message::all();
+        return MessageResource::collection($messages);
     }
-
-    public function store(StoreMessageRequest $request)
+    public function showUserMessages($userId): \Illuminate\Http\Resources\Json\AnonymousResourceCollection
     {
-        $message = Message::create($request->validated());
-        return response()->json($message, 201);
-    }
-
-    public function update(UpdateMessageRequest $request, Message $message)
-    {
-        $message->fill($request->validated());
-        $message->save();
-        return $message;
-    }
-
-    public function destroy(Message $message)
-    {
-        $message->delete();
-        return response()->noContent();
+        $messages = Message::where('sender_id', $userId)
+            ->orWhere('receiver_id', $userId)
+            ->get();
+        
+        return MessageResource::collection($messages);
     }
 }
