@@ -1,4 +1,6 @@
 <?php
+use App\Http\Controllers\MessageController;
+
 
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -13,7 +15,13 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-
+ Route::get('/message', [MessageController::class, 'index']);
+      Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/storemessage', [MessageController::class, 'store']);
+});
+        Route::get('message/users/{userId}', [MessageController::class, 'showUserMessages']);
+        Route::delete('message/{id}', [MessageController::class, 'destory']);
+        
 
 // Public routes (no authentication required)
 
@@ -29,11 +37,7 @@ use Illuminate\Support\Facades\Route;
 
      
     // Message routes
-   
-        Route::get('/message', [App\Http\Controllers\MessageController::class, 'index']);
-        Route::post('/storemessage', [App\Http\Controllers\MessageController::class, 'store']);
-        Route::get('message/users/{userId}', [App\Http\Controllers\MessageController::class, 'showUserMessages']);
-        Route::delete('message/{id}', [App\Http\Controllers\MessageController::class, 'destory']);
+  
 // Protected routes (require Sanctum token)
 
     // Auth routes

@@ -11,6 +11,7 @@ class MessageFactory extends Factory
         return [
             'sender_id' => User::factory(),
             'recipient_id' => User::factory(),
+            
             'body' => $this->faker->paragraph(),
             'read_at' => $this->faker->optional()->dateTime(),
         ];
