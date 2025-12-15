@@ -2,6 +2,7 @@
 use App\Http\Controllers\MessageController;
 
 
+use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +16,39 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+
+        Route::get('/properties', [PropertyController::class, 'index']); // For GET requests
+        Route::get('/filterbymonthlyrent', [PropertyController::class, 'filterBymonthly_rent']);
+        Route::get('/filterbycity', [PropertyController::class, 'filterBycity']);
+          Route::get('/available', [App\Http\Controllers\PropertyController::class, 'showAvillableProperties']);
+         
+
+        Route::patch('/properties', [App\Http\Controllers\PropertyController::class, 'update']); // For PATCH requests
+        Route::delete('/properties', [App\Http\Controllers\PropertyController::class, 'destroy']); // For DELETE requests
+      
+     
+    // CRUD Operations
+            
+    Route::post('/addProperty', [PropertyController::class, 'store']);             
+             
+    Route::put('updateProperty/{id}', [PropertyController::class, 'update']);         
+    Route::delete('destryProperty/{id}', [PropertyController::class, 'destroy']);    
+    
+    // Filter Routes
+    Route::get('/filterbycity', [PropertyController::class, 'filterBycity']);          // فلتر بالمدينة
+    Route::get('/filterbymonthlyrent', [PropertyController::class, 'filterBymonthly_rent']); // فلتر بالإيجار الشهري
+   
+      Route::post('/fav/{id}', [PropertyController::class, 'addToFavorites']);
+        
+      
+        Route::delete('fav/{id}', [PropertyController::class, 'removeFromFavorites']);
+        
+      
+        Route::get('fav', [PropertyController::class, 'listFavoriteProperties']);
+    
+       
+        
+
  Route::get('/message', [MessageController::class, 'index']);
       Route::middleware('auth:sanctum')->group(function () {
     Route::post('/storemessage', [MessageController::class, 'store']);
@@ -63,14 +97,11 @@ use Illuminate\Support\Facades\Route;
             Route::get('/properties', [App\Http\Controllers\UserController::class, 'getFavoriteProperties']);
             Route::delete('/properties/{propertyId}', [App\Http\Controllers\UserController::class, 'removePropertyFromFavorites']);
         
-    
+        });
     
     // Property routes
-    Route::prefix('properties')->group(function () {
-        Route::get('/', [App\Http\Controllers\PropertyController::class, 'index']);
-        Route::get('/available', [App\Http\Controllers\PropertyController::class, 'showAvillableProperties']);
-        Route::get('/city/{city}', [App\Http\Controllers\PropertyController::class, 'filterBycity']);
-        Route::get('/price-range', [App\Http\Controllers\PropertyController::class, 'filterBymonthly_rent']);
+   
+       // Add these lines (probably in your properties routes section)
         
         Route::get('/{id}', [App\Http\Controllers\PropertyController::class, 'showPropertyDetails']);
         Route::put('/{id}', [App\Http\Controllers\PropertyController::class, 'updatePropertyDetails']);
@@ -78,10 +109,10 @@ use Illuminate\Support\Facades\Route;
         
         // Property ratings
         Route::put('/{propertyId}/rating', [App\Http\Controllers\PropertyController::class, 'make_ave_rationg']);
-    });
+   
     
     // Application routes
-    Route::prefix('applications')->group(function () {
+     Route::prefix('applications')->group(function () {
         Route::get('/', [App\Http\Controllers\ApplicationController::class, 'index']);
         Route::post('/', [App\Http\Controllers\ApplicationController::class, 'store']);
         
@@ -144,4 +175,3 @@ use Illuminate\Support\Facades\Route;
         // Property management
         Route::get('/properties', [App\Http\Controllers\PropertyController::class, 'index']);
     
-});
