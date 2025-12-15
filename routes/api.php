@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -26,9 +27,15 @@ use Illuminate\Support\Facades\Route;
     Route::post('/admin/register', [App\Http\Controllers\AdminController::class, 'registerAdmin']);
     Route::post('/admin/login', [App\Http\Controllers\AdminController::class, 'loginAdmin']);
 
-
+     
+    // Message routes
+   
+        Route::get('/message', [App\Http\Controllers\MessageController::class, 'index']);
+        Route::post('/storemessage', [App\Http\Controllers\MessageController::class, 'store']);
+        Route::get('message/users/{userId}', [App\Http\Controllers\MessageController::class, 'showUserMessages']);
+        Route::delete('message/{id}', [App\Http\Controllers\MessageController::class, 'destory']);
 // Protected routes (require Sanctum token)
-Route::middleware('auth:sanctum')->group(function () {
+
     // Auth routes
     Route::post('/logout', [App\Http\Controllers\UserController::class, 'logout']);
     Route::post('/admin/logout', [App\Http\Controllers\AdminController::class, 'logoutAdmin']);
@@ -37,20 +44,21 @@ Route::middleware('auth:sanctum')->group(function () {
    
         Route::get('/me', [App\Http\Controllers\UserController::class, 'show']);
         Route::get('/', [App\Http\Controllers\UserController::class, 'index']);
-        Route::put('/{id}', [App\Http\Controllers\UserController::class, 'update']);
+        Route::post('/store1', [UserController::class, 'store']);
+        Route::patch('/{id}', [App\Http\Controllers\UserController::class, 'update']);
         Route::delete('/{id}', [App\Http\Controllers\UserController::class, 'destroy']);
         
         // User profile routes
-        Route::put('/{id}/profile-image', [App\Http\Controllers\UserController::class, 'addimage']);
-        Route::put('/{id}/id-photo', [App\Http\Controllers\UserController::class, 'editIdPhoto']);
-        Route::put('/{id}/photo', [App\Http\Controllers\UserController::class, 'editPhoto']);
+      
+        Route::post('/{id}/id-photo', [App\Http\Controllers\UserController::class, 'editIdPhoto']);
+       Route::post('/{id}/photo', [UserController::class, 'editPhoto']);
         
         // User favorites
         Route::prefix('/favorites')->group(function () {
             Route::post('/properties/{propertyId}', [App\Http\Controllers\UserController::class, 'addPropertyToFavorites']);
             Route::get('/properties', [App\Http\Controllers\UserController::class, 'getFavoriteProperties']);
             Route::delete('/properties/{propertyId}', [App\Http\Controllers\UserController::class, 'removePropertyFromFavorites']);
-        });
+        
     
     
     // Property routes
@@ -105,13 +113,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/{id}', [App\Http\Controllers\ContractController::class, 'destroyWithApprovalFromTenant']);
         });
     
+   
     
-    // Message routes
-    Route::prefix('messages')->group(function () {
-        Route::get('/', [App\Http\Controllers\MessageController::class, 'index']);
-        Route::post('/', [App\Http\Controllers\MessageController::class, 'store']);
-        Route::get('/users/{userId}', [App\Http\Controllers\MessageController::class, 'showUserMessages']);
-    });
     
     // Admin only routes
    

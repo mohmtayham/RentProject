@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\UserResource;
 use App\Http\Resources\UserResourcev;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Admin;
+use Illuminate\Support\Facades\Log;
+
 use App\Models\Landlord;
 use App\Models\Tenant;
-use App\Http\Controllers;
+use Illuminate\Support\Facades\Storage;
+
 
 class UserController extends Controller
 {
@@ -155,57 +156,53 @@ public function destroy($id)
         'message' => 'User deleted successfully'
     ]);}
 
-    public function update(Request $request, $id)
-    {
-        $user = User::findOrFail($id);
-
-        $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|unique:users,email,' . $user->id,
-            'password' => 'sometimes|required|min:4',
-            'phone_number' => 'sometimes|required|string',
-            'user_type' => 'sometimes|required|in:tenant,landlord,admin',
-        ]);
-
-   $user->update($request->only(['name', 'email', 'phone_number', 'user_type']));
-
-        $user->save();
-
-        return response()->json([
-            'message' => 'User updated successfully',
-            'user' => $user
-        ]);
-    }  
-public function addimage(Request $request, $id)
+   public function update(Request $request, $id)
 {
     $user = User::findOrFail($id);
 
-    $request->validate([
-        'profile_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+    $validated = $request->validate([
+        'name' => 'sometimes|required|string|max:255',
+        'email' => 'sometimes|required|email|unique:users,email,' . $user->id,
+        'password' => 'sometimes|required|min:4',
+        'phone_number' => 'sometimes|required|string',
+        'user_type' => 'sometimes|required|in:tenant,landlord,admin',
     ]);
 
-    if ($request->hasFile('profile_image')) {
-        $image = $request->file('profile_image');
-        $imageName = time() . '_' . $image->getClientOriginalName();
-        $image->move(public_path('images/profiles'), $imageName);
-        $user->profile_image = 'images/profiles/' . $imageName;
-        $user->save();
-
-        return response()->json([
-            'message' => 'Profile image uploaded successfully',
-            'profile_image' => $user->profile_image
-        ]);
+    // Handle password separately (hash it)
+    if ($request->filled('password')) {
+        $validated['password'] = Hash::make($request->password);
     }
 
+    // Update user with validated data (including hashed password)
+    $user->update($validated);
+
     return response()->json([
-        'message' => 'No image file found'
-    ], 400);    
+        'message' => 'User updated successfully',
+        'user' => $user
+    ]);
 }
+    //  public function update(UpdateTaskRequest $request, $id)
+    // {
+    //     try {
+    //         $user_id = Auth::user()->id;
+    //         $task = Task::findOrFail($id);
+    //         if ($task->user_id != $user_id)
+    //             return response()->json(['message' => 'Unauthorized'], 403);
+
+    //         $task->update($request->validated());
+    //         return response()->json($task, 200);
+    //     } catch (ModelNotFoundException $e) {
+    //         return response()->json(['error' => 'Task not found'], 404);
+    //     } catch (Exception $e) {
+    //         return response()->json(['error' => 'Something went wrong'], 500);
+    //     }
+    // }
+
 
 public function store(Request $request)
 {
    
-    $userId = Auth::id(); 
+    // $userId = Auth::id(); 
 
 
     $request->validate([
@@ -245,58 +242,155 @@ public function store(Request $request)
         'user' => $user
     ], 201);
 }
-public function editIdPhoto(Request $request, $id)
+
+
+
+public function editPhotodbugallproblems(Request $request, $id)
 {
-    $user = User::findOrFail($id);
-
-    $request->validate([
-        'id_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-    ]);
-
-    if ($request->hasFile('id_photo')) {
-        $idPhoto = $request->file('id_photo');
-        $idPhotoName = time() . '_' . $idPhoto->getClientOriginalName();
-        $idPhoto->move(public_path('images/id_photos'), $idPhotoName);
-        $user->id_photo = 'images/id_photos/' . $idPhotoName;
-        $user->save();
+    // Correct debug logging with proper PHP syntax:
+    Log::info('=== EDIT PHOTO DEBUG ===');
+    Log::info('User ID: ' . $id);
+    Log::info('Request Method: ' . $request->method());
+    Log::info('Content-Type: ' . $request->header('Content-Type'));
+    Log::info('All Input: ' . json_encode($request->all()));
+    Log::info('Files: ' . json_encode($request->allFiles()));
+    Log::info('Has file photo? ' . ($request->hasFile('photo') ? 'YES' : 'NO'));
+    
+    if ($request->hasFile('photo')) {
+        Log::info('File details:');
+        $file = $request->file('photo');
+        Log::info('  Name: ' . $file->getClientOriginalName());
+        Log::info('  Size: ' . $file->getSize());
+        Log::info('  MIME: ' . $file->getMimeType());
 
         return response()->json([
-            'message' => 'ID photo updated successfully',
-            'id_photo' => $user->id_photo
+            'debug' => [
+                'user_id' => $id,
+                'method' => $request->method(),
+                'has_file_photo' => $request->hasFile('photo'),
+                'all_files' => array_keys($request->allFiles()),
+                'all_input' => array_keys($request->all()),
+                'content_type' => $request->header('Content-Type'),
+                'file_name' => $file->getClientOriginalName(),
+                'file_size' => $file->getSize(),
+                'file_mime' => $file->getMimeType()
+            ]
         ]);
     }
-
+    
+    // If no file is detected, return error
     return response()->json([
-        'message' => 'No ID photo file found'
+        'error' => 'No file detected in request',
+        'debug' => [
+            'user_id' => $id,
+            'has_file_photo' => false,
+            'request_keys' => array_keys($request->all())
+        ]
     ], 400);
-
 }
 public function editPhoto(Request $request, $id)
 {
-    $user = User::findOrFail($id);
 
-    $request->validate([
-        'photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-    ]);
 
-    if ($request->hasFile('photo')) {
-        $photo = $request->file('photo');
-        $photoName = time() . '_' . $photo->getClientOriginalName();
-        $photo->move(public_path('images/photos'), $photoName);
-        $user->photo = 'images/photos/' . $photoName;
-        $user->save();
-
-        return response()->json([
-            'message' => 'Photo updated successfully',
-            'photo' => $user->photo
+   
+    try {
+        
+        // Find the user
+        $user = User::findOrFail($id);
+        
+        // Validate the request
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+        
+        // Store the new photo
+        if ($request->hasFile('photo')) {
+            // Optional: Delete old photo if exists
+            if ($user->photo && Storage::disk('public')->exists($user->photo)) {
+                Storage::disk('public')->delete($user->photo);
+            }
+            
+            $photoPath = $request->file('photo')->store('photos', 'public');
+            $user->photo = $photoPath;
+            $user->save();
+        }
+        
+        return response()->json([
+            'message' => 'Profile photo updated successfully',
+            'user' => $user,
+            'photo_url' => asset('storage/' . $user->photo) 
+        ], 200);
+        
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json([
+            'message' => 'User not found'
+        ], 404);
+        
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'message' => 'Validation failed',
+            'errors' => $e->errors()
+        ], 422);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'An error occurred',
+            'error' => $e->getMessage()
+        ], 500);
     }
-
-    return response()->json([
-        'message' => 'No photo file found'
-    ], 400);    }
+}
 
 
+public function editIdPhoto(Request $request, $id)
+{
 
+
+   
+    try {
+        
+        // Find the user
+        $user = User::findOrFail($id);
+        
+        // Validate the request
+        $request->validate([
+            'id_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+        
+        // Store the new photo
+        if ($request->hasFile('id_photo')) {
+            // Optional: Delete old photo if exists
+            if ($user->id_photo && Storage::disk('public')->exists($user->id_photo)) {
+                Storage::disk('public')->delete($user->id_photo);
+            }
+            
+            $id_photoPath = $request->file('id_photo')->store('id_photos', 'public');
+            $user->id_photo = $id_photoPath;
+            $user->save();
+        }
+        
+        return response()->json([
+            'message' => 'Profile photo updated successfully',
+            'user' => $user,
+            'id_photo_url' => asset('storage/' . $user->id_photo) 
+        ], 200);
+        
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json([
+            'message' => 'User not found'
+        ], 404);
+        
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'message' => 'Validation failed',
+            'errors' => $e->errors()
+        ], 422);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'An error occurred',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
 
 }
