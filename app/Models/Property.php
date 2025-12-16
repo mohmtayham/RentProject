@@ -24,6 +24,16 @@ class Property extends Model
         return $this->belongsTo(Landlord::class);
     }
 
+public function favoritedByTenants()
+{
+    return $this->belongsToMany(
+        Tenant::class,
+        'favorites',
+        'property_id',
+        'tenant_id'
+    )->withTimestamps();
+}
+
     public function rentalContracts(): HasMany
     {
         return $this->hasMany(RentalContract::class);

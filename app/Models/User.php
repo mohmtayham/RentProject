@@ -99,6 +99,12 @@ class User extends Authenticatable
 {
     return $this->status === 'approved';
 }
+   
+public function favoriteProperties()
+{
+    return $this->belongsToMany(Property::class, 'properties')
+                ->withTimestamps();
+}
 
 public function approver()
 {

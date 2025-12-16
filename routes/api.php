@@ -26,7 +26,18 @@ use Illuminate\Support\Facades\Route;
         Route::patch('/properties', [App\Http\Controllers\PropertyController::class, 'update']); // For PATCH requests
         Route::delete('/properties', [App\Http\Controllers\PropertyController::class, 'destroy']); // For DELETE requests
       
-     
+     Route::middleware('auth:sanctum')->group(function () {
+
+       Route::post('/addPropertytofavorite/{property_id}', [PropertyController::class, 'addToFavorites']);
+      
+        Route::delete('/removeFromProperty/{propertyId}', [PropertyController::class, 'removeFromFavorites']);
+        
+        Route::get('/showProperty', [PropertyController::class, 'listFavoriteProperties']);
+        
+      
+        Route::get('/check/{propertyId}', [PropertyController::class, 'checkFavorite']);
+    } );
+
     // CRUD Operations
             
     Route::post('/addProperty', [PropertyController::class, 'store']);             

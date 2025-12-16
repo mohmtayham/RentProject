@@ -7,7 +7,11 @@ use Illuminate\Http\Request;
 use App\Http\Requests\StorePropertyRequest;
 use App\Http\Requests\UpdatePropertyRequest;
 use App\Http\Resources\PropertyResource;
+use Exception;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+
 
 class PropertyController extends Controller
 {
@@ -206,37 +210,205 @@ public function destroy($id)
     ], 200);
 }
 
-public function addToFavorites(Request $request, $id)
+/**
+ * Add property to authenticated user's favorites
+ */
+
+//   public function addToFavorites($taskId)
+//     {
+//         try {
+//             Task::findOrFail($taskId);
+//             Auth::user()->favoriteTasks()->syncWithoutDetaching($taskId);
+//             return response()->json(['message' => 'Task added to favorites'], 200);
+//         } catch (ModelNotFoundException $e) {
+//             return response()->json(['error' => 'Task not found'], 404);
+//         } catch (Exception $e) {
+//             return response()->json(['error' => 'Something went wrong'], 500);
+//         }
+//     }
+//  public function user()
+//     {
+//         return $this->belongsTo(User::class);
+//     }
+//     public function categories()
+//     {
+//         return $this->belongsToMany(Category::class,'category_task');
+//     }
+//     public function favoriteByUser()
+//     {
+//         return $this->belongsToMany(User::class,'favorites');
+//     }
+//     public function profile()
+//     {
+//         return $this->hasOne(Profile::class);
+//     }
+//     public function tasks()
+//     {
+//         return $this->hasMany(Task::class);
+//     }
+//     public function favoriteTasks()
+//     {
+//         return $this->belongsToMany(Task::class,'favorites');
+//     }
+// }
+
+
+public function addToFavorites(Request $request, $propertyId)
 {
-    $property = Property::findOrFail($id);
-    $user = $request->user();
+    //  Property::findOrFail($propertyId);
+    //        Auth::user()->favoriteProperties()->syncWithoutDetaching($propertyId);
+    //       return response()->json(['message' => 'Task added to favorites'], 200);
+               try {
+        // Log the start of the request
+        Log::info('addToFavorites called', [
+            'user_id' => $request->user()?->id,
+            'property_id' => $propertyId,
+            'ip' => $request->ip()
+        ]);
 
-    $user->favoriteProperties()->attach($property->id);
+   
+        // Check if user is authenticated
+                $tenant = $request->user()->tenant;
 
-    return response()->json([
-        'message' => 'Property added to favorites'
-    ], 200);
+        if (!$tenant) {
+            Log::warning('Unauthenticated user tried to add to favorites', ['property_id' => $propertyId]);
+            return response()->json([
+                'message' => 'Unauthenticated.'
+            ], 401);
+        }
+
+        // Validate propertyId is numeric
+        if (!is_numeric($propertyId)) {
+            Log::warning('Invalid property ID format', ['property_id' => $propertyId]);
+            return response()->json([
+                'message' => 'Invalid property ID.'
+            ], 400);
+        }
+
+        // Find the property
+        $property = Property::find($propertyId);
+        if (!$property) {
+            Log::info('Property not found', ['property_id' => $propertyId]);
+            return response()->json([
+                'message' => 'Property not found.'
+            ], 404);
+        }
+
+        Log::info('Property found', ['property_id' => $property->id, 'title' => $property->title ?? 'No title']);
+
+        // Check if already in favorites
+       $alreadyFavorite = $tenant->favoriteProperties()
+ ->where('property_id', $property->id)
+    ->exists();
+
+        if ($alreadyFavorite) {
+            Log::info('Property already in favorites', [
+                'tenant_id' => $tenant->id,
+                'property_id' => $property->id
+            ]);
+
+            return response()->json([
+                'message' => 'Property is already in your favorites',
+                'is_favorite' => true
+            ], 200);
+        }
+
+        // Attach to favorites
+        $tenant->favoriteProperties()->attach($property->id);
+
+        Log::info('Property successfully added to favorites', [
+            'user_id' => $tenant->id,
+            'property_id' => $property->id
+        ]);
+
+        return response()->json([
+            'message' => 'Property added to your favorites',
+            'user_id' => $tenant->id,
+            'property_id' => $property->id,
+            'is_favorite' => true
+        ], 200);
+
+    } catch (Exception $e) {
+        // Log the full error with trace
+        Log::error('Error in addToFavorites', [
+            'user_id' => $request->user()?->id ?? 'guest',
+            'property_id' => $propertyId ?? null,
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        // Return a clean error response (don't expose details in production)
+        return response()->json([
+            'message' => 'An error occurred while adding to favorites.',
+            'hint' => app()->environment('local') ? $e->getMessage() : 'Check server logs.'
+        ], 500);
+    }
 }
 
+/**
+ * Remove property from authenticated user's favorites
+ */
 public function removeFromFavorites(Request $request, $id)
 {
+    // Find the property
     $property = Property::findOrFail($id);
+    
+    // Get the authenticated user
     $user = $request->user();
-
+    
+    // Check if property is in favorites
+    if (!$user->favoriteProperties()->where('property_id', $property->id)->exists()) {
+        return response()->json([
+            'message' => 'Property is not in your favorites',
+            'is_favorite' => false
+        ], 404);
+    }
+    
+    // Remove from favorites
     $user->favoriteProperties()->detach($property->id);
-
+    
     return response()->json([
-        'message' => 'Property removed from favorites'
+        'message' => 'Property removed from your favorites',
+        'user_id' => $user->id,
+        'property_id' => $property->id,
+        'is_favorite' => false
     ], 200);
 }
+
+/**
+ * List authenticated user's favorite properties
+ */
 public function listFavoriteProperties(Request $request)
 {
     $user = $request->user();
-    $favoriteProperties = $user->favoriteProperties;
-
+    
+    // Get favorite properties with relationships
+    $favoriteProperties = $user->favoriteProperties()
+        ->with(['images', 'landlord'])
+        ->paginate(15);
+    
     return PropertyResource::collection($favoriteProperties);
+}
 
-
+/**
+ * Check if property is in authenticated user's favorites
+ */
+public function checkFavorite(Request $request, $id)
+{
+    $property = Property::findOrFail($id);
+    $user = $request->user();
+    
+    $isFavorite = $user->favoriteProperties()
+        ->where('property_id', $property->id)
+        ->exists();
+    
+    return response()->json([
+        'is_favorite' => $isFavorite,
+        'property_id' => $property->id,
+        'user_id' => $user->id
+    ]);
 }
 
 }

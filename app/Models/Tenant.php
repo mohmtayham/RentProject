@@ -21,7 +21,16 @@ class Tenant extends Model
 
     public function favorites(): HasMany
     {
-        return $this->hasMany(Favorite::class);
-    }
+        return $this->hasMany(Favorite::class);}
+         public function favoriteProperties()
+{
+    return $this->belongsToMany(
+        Property::class,
+        'favorites',
+        'tenant_id',
+        'property_id'
+    )->withTimestamps();
+}
+    
 }
 
