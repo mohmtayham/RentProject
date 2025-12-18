@@ -15,12 +15,8 @@ class RentalContractFactory extends Factory
         
         return [
             'application_id' => Application::factory(),
-            'landlord_id' => Landlord::factory(),
-            'property_id' => Property::factory(),
-            'tenant_id' => Tenant::factory(),
-            'start_date' => $startDate,
-            'end_date' => $this->faker->dateTimeBetween($startDate, '+1 year'),
-            'monthly_rent' => $this->faker->numberBetween(1000, 5000),
+           
+         
              'rate' => $this->faker->numberBetween(1, 5),
             'status' => $this->faker->randomElement(['draft', 'active', 'expired', 'terminated']),
             'signed_at' => $this->faker->optional()->dateTimeBetween($startDate, '+1 month'),

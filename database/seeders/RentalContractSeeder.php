@@ -14,9 +14,7 @@ class RentalContractSeeder extends Seeder
         foreach ($approvedApplications as $application) {
             RentalContract::factory()->create([
                 'application_id' => $application->id,
-                'property_id' => $application->property_id,
-                'tenant_id' => $application->tenant_id,
-                'landlord_id' => $application->property->landlord_id,
+               
                 'rate' => rand(1, 5),
                 'status' => 'active',
             ]);

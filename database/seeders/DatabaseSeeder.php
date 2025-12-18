@@ -8,8 +8,13 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+
             UserSeeder::class,
             TenantSeeder::class,
+            UserWalletSeeder::class,
+            UserWalletTransactionSeeder::class,
+
+
             LandlordSeeder::class,
             AdminSeeder::class,
             PropertySeeder::class,
@@ -17,6 +22,8 @@ class DatabaseSeeder extends Seeder
             RentalContractSeeder::class,
             FavoriteSeeder::class,
             MessageSeeder::class,
+
+
         ]);
     }
 }

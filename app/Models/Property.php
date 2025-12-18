@@ -34,10 +34,7 @@ public function favoritedByTenants()
     )->withTimestamps();
 }
 
-    public function rentalContracts(): HasMany
-    {
-        return $this->hasMany(RentalContract::class);
-    }
+   
 
    
 }

@@ -1,9 +1,17 @@
 <?php
+
+use App\Http\Controllers\ApplicationController;
+use App\Http\Controllers\ContractController;
 use App\Http\Controllers\MessageController;
+//     Route::middleware('auth:sanctum')->group(function () {
 
+// Route::post('/storeproduct',[ProductController::class,'store']);
+//     });
 
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WalletController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +24,58 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+use App\Http\Controllers\FcmController;
+use App\Models\Application;
+
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::delete('/remove_product/{id}',[ProductController::class,'destroy']);
+       
+
+
+    });
+
+
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/add_application/{propertyId}',[ContractController::class,'store']);
+
+     
+
+        Route::post('/add_applicationOrder',[ApplicationController::class,'makeOrderToLandlord']);
+
+        Route::post('/add_contract',[ContractController::class,'store']);
+
+        });
+        Route::middleware('auth:sanctum')->group(function () {
+ 
+    Route::patch('/applications/{id}/status', [ApplicationController::class, 'approveOrRejectOrMakeUnderreview']);
+});
+
+
+   
+  Route::patch('/users/{id}/approve', [App\Http\Controllers\AdminController::class, 'approveUser']);
+
+ Route::post('/addPropertytofavorite/{property_id}', [PropertyController::class, 'addToFavorites']);
+  
+
+        Route::middleware('auth:sanctum')->group(function () {
+
+Route::put('update-device-token', [FcmController::class, 'updateDeviceToken']);
+Route::post('send-fcm-notification', [FcmController::class, 'sendFcmNotification']);
+        });
+        Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/wallet', [WalletController::class, 'show']);
+    Route::post('/wallet/deposit', [WalletController::class, 'deposit']);
+    Route::post('/wallet/withdraw', [WalletController::class, 'withdraw']);
+});
+
+        Route::get('/all_application',[ApplicationController::class,'index']);
+        Route::get('/all_contract',[ContractController::class,'index']);
+
+
+    
+
 
         Route::get('/properties', [PropertyController::class, 'index']); // For GET requests
         Route::get('/filterbymonthlyrent', [PropertyController::class, 'filterBymonthly_rent']);
@@ -28,7 +88,7 @@ use Illuminate\Support\Facades\Route;
       
      Route::middleware('auth:sanctum')->group(function () {
 
-       Route::post('/addPropertytofavorite/{property_id}', [PropertyController::class, 'addToFavorites']);
+      
       
         Route::delete('/removeFromProperty/{propertyId}', [PropertyController::class, 'removeFromFavorites']);
         
@@ -39,15 +99,22 @@ use Illuminate\Support\Facades\Route;
     } );
 
     // CRUD Operations
-            
-    Route::post('/addProperty', [PropertyController::class, 'store']);             
+ Route::middleware('auth:sanctum')->group(function () {
+    // إضافة عقار جديد - للمالكين فقط
+    Route::post('/addProperty', [PropertyController::class, 'store']);
+
+    // باقي routes الخاصة بالعقارات لو موجودة
+    Route::get('/properties', [PropertyController::class, 'index']);
+    Route::get('/properties/{id}', [PropertyController::class, 'showPropertyDetails']);
+    // إلخ...
+});    
              
     Route::put('updateProperty/{id}', [PropertyController::class, 'update']);         
     Route::delete('destryProperty/{id}', [PropertyController::class, 'destroy']);    
     
     // Filter Routes
-    Route::get('/filterbycity', [PropertyController::class, 'filterBycity']);          // فلتر بالمدينة
-    Route::get('/filterbymonthlyrent', [PropertyController::class, 'filterBymonthly_rent']); // فلتر بالإيجار الشهري
+    Route::get('/filterbycity', [PropertyController::class, 'filterBycity']);        
+    Route::get('/filterbymonthlyrent', [PropertyController::class, 'filterBymonthly_rent']);
    
       Route::post('/fav/{id}', [PropertyController::class, 'addToFavorites']);
         
@@ -90,13 +157,14 @@ use Illuminate\Support\Facades\Route;
     Route::post('/admin/logout', [App\Http\Controllers\AdminController::class, 'logoutAdmin']);
     
     // User routes
-   
+        Route::middleware('auth:sanctum')->group(function () {
+         
         Route::get('/me', [App\Http\Controllers\UserController::class, 'show']);
         Route::get('/', [App\Http\Controllers\UserController::class, 'index']);
         Route::post('/store1', [UserController::class, 'store']);
         Route::patch('/{id}', [App\Http\Controllers\UserController::class, 'update']);
         Route::delete('/{id}', [App\Http\Controllers\UserController::class, 'destroy']);
-        
+        });
         // User profile routes
       
         Route::post('/{id}/id-photo', [App\Http\Controllers\UserController::class, 'editIdPhoto']);
@@ -166,7 +234,7 @@ use Illuminate\Support\Facades\Route;
    
         // User management
         Route::get('/users', [App\Http\Controllers\AdminController::class, 'getAllUsers']);
-        Route::patch('/users/{id}/approve', [App\Http\Controllers\AdminController::class, 'approveUser']);
+      
         Route::patch('/users/{id}/reject', [App\Http\Controllers\AdminController::class, 'rejectUser']);
        Route::patch('/users/{id}', [App\Http\Controllers\AdminController::class, 'updateUser']);
         Route::delete('/users/{id}', [App\Http\Controllers\AdminController::class, 'deleteUser']);

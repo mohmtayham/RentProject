@@ -11,9 +11,11 @@ return new class extends Migration
         Schema::create('tenants', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+          
             $table->string('special_requirements')->nullable();
             $table->string('marital_status')->nullable();
             $table->string('emergency_contact_phone')->nullable();
+            
             $table->timestamps();
         });
     }

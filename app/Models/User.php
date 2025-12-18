@@ -110,5 +110,8 @@ public function approver()
 {
     return $this->belongsTo(User::class, 'approved_by');
 }
+public function products()
+{
+    return $this->hasMany(Product::class);}
 
 }

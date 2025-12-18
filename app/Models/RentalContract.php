@@ -9,16 +9,10 @@ class RentalContract extends Model
 {
     use HasFactory;
     
-     // ✅ Explicit table name
+  
 
     protected $fillable = [
-        'application_id',
-        'property_id',
-        'tenant_id',
-        'landlord_id',
-        'start_date',
-        'end_date',
-        'monthly_rent',
+        'application_id',    
         'rate',
         'status'
     ];
@@ -26,10 +20,7 @@ class RentalContract extends Model
     
 
     protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
-        'signed_at' => 'datetime',
-        'monthly_rent' => 'decimal:2',
+       
         'rate' => 'integer',
         'security_deposit' => 'decimal:2',
     ];
@@ -39,14 +30,5 @@ class RentalContract extends Model
     {
         return $this->belongsTo(Application::class);
     }
-    public function property(): BelongsTo
-    {
-        return $this->belongsTo(Property::class);
-    }
-
-  
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class);
-    }
+    
 }

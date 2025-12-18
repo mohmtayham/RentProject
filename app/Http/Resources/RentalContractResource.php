@@ -11,12 +11,8 @@ class RentalContractResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'property_id' => $this->property_id,
-            'tenant_id' => $this->tenant_id,
-            'landlord_id' => $this->landlord_id,
-            'start_date' => $this->start_date,
-            'end_date' => $this->end_date,
-            'rent_amount' => $this->rent_amount,
+            
+            
             'rate' => $this->rate,
             'status' => $this->status,
             'created_at' => $this->created_at,

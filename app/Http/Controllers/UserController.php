@@ -23,7 +23,13 @@ class UserController extends Controller
         'name' => 'required|string|max:255',
         'email' => 'required|email|unique:users,email',
         'password' => 'required|min:4',
-        'phone_number' => 'required|string',
+       'phone_number' => [
+        'required',
+        'string',
+        'size:10',                   
+        'regex:/^09[0-9]{8}$/',      
+        
+    ],
         'user_type' => 'required|in:tenant,landlord,admin',
     ]);
 
@@ -68,12 +74,12 @@ class UserController extends Controller
         // admin is blocked above, so no need to handle
     }
 
-    $token = $user->createToken('auth_token')->plainTextToken;
+  //  $token = $user->createToken('auth_token')->plainTextToken;
 
     return response()->json([
         'message' => 'Registration successful. Awaiting admin approval.',
         'user' => $user->load($user->user_type),
-        'token' => $token
+     
     ], 201);
 }
     

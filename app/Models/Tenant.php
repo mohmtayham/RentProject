@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Tenant extends Model
 {
     use HasFactory;
-    protected $fillable = ['user_id', 'special_requirements', 'marital_status', 'emergency_contact_phone'];
+    protected $fillable = ['user_id', 'special_requirements', 'marital_status','wallet_id', 'emergency_contact_phone'];
 
     // RELATIONSHIPS
     public function user(): BelongsTo
@@ -31,6 +31,11 @@ class Tenant extends Model
         'property_id'
     )->withTimestamps();
 }
+     public function userWallets(): HasMany
+     {
+  return $this->hasMany(UserWallet::class);
+
+     }
     
 }
 

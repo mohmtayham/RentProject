@@ -13,8 +13,7 @@ class UserFactory extends Factory
             'name' => $this->faker->name(),
             'email' => $this->faker->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => Hash::make('password'),
-            
+            'password' => Hash::make('password'),   
             'user_type' => $this->faker->randomElement(['tenant', 'landlord', 'admin']),
             'phone_number' => $this->faker->phoneNumber(),
             'photo' => $this->faker->optional()->imageUrl(),

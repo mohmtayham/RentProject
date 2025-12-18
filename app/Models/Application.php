@@ -19,6 +19,9 @@ class Application extends Model
         'tenant_id', 
         'property_id', 
         'landlord_id', 
+         'start_date',
+        'end_date',
+        'monthly_rent',
         'status', 
         'submitted_at', 
        

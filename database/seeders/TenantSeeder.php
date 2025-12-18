@@ -9,14 +9,7 @@ class TenantSeeder extends Seeder
 {
     public function run(): void
     {
-        $tenantUsers = User::where('user_type', 'tenant')->get();
-
-        foreach ($tenantUsers as $user) {
-            Tenant::factory()->create([
-                'user_id' => $user->id,
-            ]);
-        }
-
+        
         Tenant::factory()->count(5)->create();
     }
 }

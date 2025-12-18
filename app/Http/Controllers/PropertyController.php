@@ -86,49 +86,107 @@ public function showPropertyDetails($id)
 /**
  * Store a newly created property in storage.
  */
+/**
+ * Store a newly created property in storage.
+ */
 public function store(Request $request)
 {
-    // Validate incoming data
-    $validated = $request->validate([
-        'landlord_id' => 'required|exists:landlords,id',
-        'address' => 'required|string|max:255',
-        'city' => 'required|string|max:100',
-        'state' => 'nullable|string|max:100',
-        'square_feet' => 'nullable|integer|min:0',
-        'monthly_rent' => 'required|numeric|min:0',
-        'description' => 'nullable|string',
-        'is_available' => 'nullable|boolean',
-        'note' => 'nullable|string|max:500',
-        'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Changed to image validation
+    Log::info('addProperty endpoint called', [
+        'user_id' => $request->user()?->id,
+        'user_type' => $request->user()?->user_type,
+        'ip' => $request->ip(),
+        'request_data' => $request->all(),
+        'files' => $request->hasFile('photo') ? 'Photo uploaded' : 'No photo'
     ]);
 
-    // Prepare property data
-    $propertyData = [
-        'landlord_id' => $request->landlord_id,
-        'address' => $request->address,
-        'city' => $request->city,
-        'state' => $request->state,
-        'square_feet' => $request->square_feet,
-        'monthly_rent' => $request->monthly_rent,
-        'description' => $request->description,
-        'is_available' => $request->is_available ?? true,
-        'note' => $request->note,
-    ];
+    try {
+        // 1. تحقق من المصادقة ونوع المستخدم
+        $user = $request->user();
+        if (!$user) {
+            Log::warning('Unauthenticated user tried to add property');
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
 
-    // Handle photo upload
-    if ($request->hasFile('photo')) {
-        $photoPath = $request->file('photo')->store('properties/photos', 'public');
-        $propertyData['photo'] = $photoPath;
+        if ($user->user_type !== 'landlord') {
+            Log::warning('Non-landlord tried to add property', ['user_type' => $user->user_type]);
+            return response()->json(['message' => 'Only landlords can add properties.'], 403);
+        }
+
+        // 2. Validation
+        $validated = $request->validate([
+            'address'      => 'required|string|max:255',
+            'city'         => 'required|string|max:100',
+            'state'        => 'nullable|string|max:100',
+            'square_feet'  => 'nullable|integer|min:0',
+            'monthly_rent' => 'required|numeric|min:0',
+            'description'  => 'nullable|string',
+            'is_available' => 'nullable|boolean',
+            'note'         => 'nullable|string|max:500',
+            'photo'        => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        Log::info('Validation passed', $validated);
+
+        // 3. جلب landlord_id من المستخدم المصادق (أكثر أمانًا من الـ request)
+        $landlord = $user->landlord;
+        if (!$landlord) {
+            Log::error('Authenticated landlord has no landlord profile');
+            return response()->json(['message' => 'Your landlord profile is incomplete.'], 400);
+        }
+
+        // 4. تحضير البيانات
+        $propertyData = [
+            'landlord_id'   => $landlord->id,
+            'address'       => $validated['address'],
+            'city'          => $validated['city'],
+            'state'         => $validated['state'] ?? null,
+            'square_feet'   => $validated['square_feet'] ?? null,
+            'monthly_rent'  => $validated['monthly_rent'],
+            'description'   => $validated['description'] ?? null,
+            'is_available'  => $validated['is_available'] ?? true,
+            'note'          => $validated['note'] ?? null,
+        ];
+
+        
+        if ($request->hasFile('photo')) {
+            $photoPath = $request->file('photo')->store('properties/photos', 'public');
+            $propertyData['photo'] = $photoPath;
+            Log::info('Photo uploaded successfully', ['path' => $photoPath]);
+        }
+
+        // 6. إنشاء العقار
+        $property = Property::create($propertyData);
+
+        Log::info('Property created successfully', ['property_id' => $property->id]);
+
+        // 7. الرد الناجح
+        return response()->json([
+            'message' => 'Property created successfully',
+            'data'    => new PropertyResource($property)
+        ], 201);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        Log::warning('Validation failed in addProperty', [
+            'errors' => $e->errors()
+        ]);
+        return response()->json([
+            'message' => 'Validation failed',
+            'errors'  => $e->errors()
+        ], 422);
+
+    } catch (\Exception $e) {
+        Log::error('Unexpected error in addProperty', [
+            'message' => $e->getMessage(),
+            'file'    => $e->getFile(),
+            'line'    => $e->getLine(),
+            'trace'   => $e->getTraceAsString()
+        ]);
+
+        return response()->json([
+            'message' => 'Failed to create property. Please try again.',
+            'hint'    => app()->environment('local') ? $e->getMessage() : 'Check server logs.'
+        ], 500);
     }
-
-    // Create the property
-    $property = Property::create($propertyData);
-
-    // Return response with the created property
-    return response()->json([
-        'message' => 'Property created successfully',
-        'data' => new PropertyResource($property)
-    ], 201);
 }
 /**
  * Update the specified property in storage.
