@@ -78,6 +78,15 @@ public function makeOrderToLandlord(Request $request)
     if ($existing) {
         return response()->json(['message' => 'You already have an active application for this property.'], 400);
     }
+      $conflict = Application::where('property_id', $validated['property_id'])
+    ->where('start_date', '<', $validated['end_date'])  
+    ->where('end_date', '>', $validated['start_date'])   
+    ->exists();
+
+if ($conflict) {
+    return response()->json(['message' => 'Reservation conflict detected.'], 409);
+}
+
 
    
     $startDate = Carbon::parse($validated['start_date']);
