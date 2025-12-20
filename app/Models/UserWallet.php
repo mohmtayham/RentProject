@@ -14,6 +14,7 @@ class Userwallet extends Model
     
     protected $fillable = [
         'tenant_id',
+        'landlord_id',
         'balance'
     ];
 
@@ -22,7 +23,10 @@ class Userwallet extends Model
     {
         return $this->belongsTo(Tenant::class);
     }
-
+    public function landlord()
+    {
+        return $this->belongsTo(Landlord::class);
+    }
     public function transactions()
     {
         return $this->hasMany(UserWalletTransaction::class, 'userwallet_id');

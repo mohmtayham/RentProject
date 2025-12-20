@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
@@ -106,6 +107,43 @@ public function favoriteProperties()
                 ->withTimestamps();
 }
 
+    // Friends relations
+    public function friends(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'friends', 'user_id', 'friend_id')
+                    ->wherePivot('accepted', true)
+                    ->withTimestamps();
+    }
+
+    public function pendingFriendsSent(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'friends', 'user_id', 'friend_id')
+                    ->wherePivot('accepted', false)
+                    ->withTimestamps();
+    }
+
+    public function pendingFriendsReceived(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'friends', 'friend_id', 'user_id')
+                    ->wherePivot('accepted', false)
+                    ->withTimestamps();
+    }
+
+    public function isFriendWith($userId)
+    {
+        return $this->friends()->where('friend_id', $userId)->exists();
+    }
+
+    public function hasSentRequestTo($userId)
+    {
+        return $this->pendingFriendsSent()->where('friend_id', $userId)->exists();
+    }
+
+    public function hasReceivedRequestFrom($userId)
+    {
+        return $this->pendingFriendsReceived()->where('user_id', $userId)->exists();
+    }
+
 public function approver()
 {
     return $this->belongsTo(User::class, 'approved_by');
@@ -113,5 +151,8 @@ public function approver()
 public function products()
 {
     return $this->hasMany(Product::class);}
+public function property(){
+    return $this->hasMany(Property::class);
+}
 
 }

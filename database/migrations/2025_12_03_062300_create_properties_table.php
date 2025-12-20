@@ -10,7 +10,8 @@ return new class extends Migration
     {
         Schema::create('properties', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('landlord_id')->constrained('landlords')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            
             $table->string('address')->nullable();
             $table->string('city')->nullable();
             $table->string('state')->nullable();
@@ -21,6 +22,9 @@ return new class extends Migration
             $table->string('note')->nullable();
             $table->integer('avg_rating')->default(0);
             $table->string('photo')->nullable();
+            $table->decimal('latitude', 10, 8)->nullable();
+            $table->decimal('longitude', 10, 8)->nullable();
+            $table->unsignedInteger('views')->default(0);
             $table->timestamps();
         });
     }

@@ -30,12 +30,7 @@ public function store(Request $request)
   // Validate input
     $validated = $request->validate([
         'application_id' => 'required|exists:applications,id',
-        'property_id' => 'required|exists:properties,id',
-        'tenant_id' => 'required|exists:users,id',
-        'landlord_id' => 'required|exists:users,id',
-        'start_date' => 'required|date',
-        'end_date' => 'required|date|after:start_date',
-        'monthly_rent' => 'required|numeric',
+       
         'rate' => 'nullable|integer|min:1|max:5',
         'status' => 'required|in:active,terminated,pending',
     ]);
@@ -50,7 +45,6 @@ public function addContract(Request $request)
     // Validate input
     $validated = $request->validate([
         'application_id' => 'required|exists:applications,id',
-        
         'rate' => 'nullable|integer|min:1|max:5',
         'status' => 'required|in:active,terminated,pending',
     ]);
@@ -73,8 +67,7 @@ public function show(Request $request)
     
     $validated = $request->validate([
        'application_id' => 'sometimes|exists:applications,id',
-        'end_date' => 'sometimes|date|after:start_date',
-        'monthly_rent' => 'sometimes|numeric',
+       
         'rate' => 'nullable|integer|min:1|max:5',
         'status' => 'sometimes|in:draft,active,expired,terminated',
     ]);

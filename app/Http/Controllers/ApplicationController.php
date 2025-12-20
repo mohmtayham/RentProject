@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -218,7 +219,7 @@ if ($application->property->landlord_id !== $user->landlord->id) {
     return response()->json(['message' => 'You are not authorized to manage this application.'], 403);
 }
 
-        // 6. Validation للـ status
+        // 
         $validated = $request->validate([
             'status' => 'required|string|in:approved,rejected,under_review',
         ]);
@@ -237,8 +238,75 @@ if ($application->property->landlord_id !== $user->landlord->id) {
             'new_status'     => $application->status,
             'updated_by'     => $user->id
         ]);
+        
 
-       
+
+
+if ($validated['status'] === 'approved') {
+
+    $property = $application->property; 
+    $amount   = $property->monthly_rent;
+
+
+    $application->loadMissing('tenant');
+
+    if (!$application->tenant) {
+        Log::error('Application has no tenant', ['application_id' => $application->id]);
+        return response()->json(['message' => 'Invalid application: missing tenant.'], 500);
+    }
+
+  
+    $tenantWallet = $application->tenant->wallet;
+
+    
+    // $tenantWallet = Wallet::find($application->tenant->wallet_id);
+
+   
+    $landlordWallet = $user->landlord->wallet; // Wallet::find($user->landlord->wallet_id);
+
+    if (!$tenantWallet || !$landlordWallet) {
+        Log::error('Wallet not found for tenant or landlord', [
+            'tenant_id' => $application->tenant_id,
+            'landlord_id' => $user->landlord->id
+        ]);
+        return response()->json(['message' => 'Wallet not configured properly.'], 500);
+    }
+
+    
+    if ($tenantWallet->balance < $amount) {
+        Log::warning('Insufficient balance for rent payment', [
+            'tenant_id' => $application->tenant_id,
+            'required' => $amount,
+            'current_balance' => $tenantWallet->balance
+        ]);
+        return response()->json([
+            'message' => 'Insufficient balance to pay the monthly rent.'
+        ], 400);
+    }
+
+  
+    $tenantWallet->balance   -= $amount;   
+    $landlordWallet->balance += $amount;  
+
+    // حفظ التغييرات
+    $tenantWallet->save();
+    $landlordWallet->save();
+
+    Log::info('Rent payment transferred manually via database', [
+        'amount' => $amount,
+        'from_tenant_wallet' => $tenantWallet->id,
+        'to_landlord_wallet' => $landlordWallet->id,
+        'application_id' => $application->id
+    ]);
+}
+
+    Log::info('Rent transferred successfully', [
+        'amount' => $amount,
+        'from_tenant' => $application->tenant->id,
+        'to_landlord' => $user->landlord->id,
+        'application_id' => $application->id
+    ]);
+    
         return response()->json([
             'message' => 'Application status updated successfully.',
             'application' => [

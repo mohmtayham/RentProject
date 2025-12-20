@@ -10,7 +10,10 @@ return new class extends Migration
     {
         Schema::create('userwallets', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('tenant_id')->constrained('tenants')->cascadeOnDelete();
+            $table->foreignId('landlord_id')->constrained('landlords')->cascadeOnDelete();
+
+            
             $table->decimal('balance', 12, 2)->default(0.00);
             $table->timestamps();
         });

@@ -26,4 +26,12 @@ class Landlord extends Model
     {
         return $this->hasMany(Property::class);
     }
+    public function applications(): HasMany
+    {
+        return $this->hasMany(Application::class);
+    }
+    public function userwallet(): HasMany
+    {
+        return $this->hasMany(Userwallet::class);
+    }
 }

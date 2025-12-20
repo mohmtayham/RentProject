@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             ApplicationSeeder::class,
             RentalContractSeeder::class,
             FavoriteSeeder::class,
+            FriendSeeder::class,
             MessageSeeder::class,
 
 

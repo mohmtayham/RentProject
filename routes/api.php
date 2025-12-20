@@ -13,6 +13,7 @@ use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WalletController;
 use Illuminate\Http\Request;
+use App\Http\Controllers\FriendController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -24,8 +25,13 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-use App\Http\Controllers\FcmController;
-use App\Models\Application;
+    Route::middleware('auth:sanctum')->group(function () {
+
+Route::post('/storemessage', [MessageController::class, 'store']);});
+    Route::middleware('auth:sanctum')->group(function () {
+Route::get('/showwallet',[WalletController::class,'show']);
+    });
+
 
 
     Route::middleware('auth:sanctum')->group(function () {
@@ -61,13 +67,17 @@ use App\Models\Application;
 
         Route::middleware('auth:sanctum')->group(function () {
 
-Route::put('update-device-token', [FcmController::class, 'updateDeviceToken']);
-Route::post('send-fcm-notification', [FcmController::class, 'sendFcmNotification']);
+        Route::post('/friend/request/{friend}', [FriendController::class, 'sendRequest']);
+        Route::post('/friend/accept/{user}', [FriendController::class, 'acceptRequest']);
+        Route::delete('/friend/decline/{user}', [FriendController::class, 'declineRequest']);
+        Route::delete('/friend/remove/{friend}', [FriendController::class, 'removeFriend']);
+
+
         });
         Route::middleware('auth:sanctum')->group(function () {
     Route::get('/wallet', [WalletController::class, 'show']);
     Route::post('/wallet/deposit', [WalletController::class, 'deposit']);
-    Route::post('/wallet/withdraw', [WalletController::class, 'withdraw']);
+    Route::post('/wallet/withdraw', action: [WalletController::class, 'withdraw']);
 });
 
         Route::get('/all_application',[ApplicationController::class,'index']);
@@ -129,7 +139,7 @@ Route::post('send-fcm-notification', [FcmController::class, 'sendFcmNotification
 
  Route::get('/message', [MessageController::class, 'index']);
       Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/storemessage', [MessageController::class, 'store']);
+    
 });
         Route::get('message/users/{userId}', [MessageController::class, 'showUserMessages']);
         Route::delete('message/{id}', [MessageController::class, 'destory']);

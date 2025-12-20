@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\MessageSent;
 use App\Http\Resources\MessageResource;
 use App\Models\Message;
 use Illuminate\Http\Request;
@@ -13,34 +14,30 @@ class MessageController extends Controller
 {
  
 
-    public function store(Request $request)
-    {
-        // Get authenticated user ID (requires proper Sanctum setup)
-        $userId = Auth::id();
-        
-        if (!$userId) {
-            return response()->json([
-                'error' => 'Unauthenticated',
-                'message' => 'User not authenticated.'
-            ], 401);
-        }
-        
-        // Validate request
-        $request->validate([
-            'recipient_id' => 'required|integer|exists:users,id',
-            'body' => 'required|string|max:1000',
-        ]);
-        
-        // Create message
-        $message = Message::create([
-            'sender_id' => $userId,
-            'recipient_id' => $request->recipient_id,
-            'body' => $request->body,
-        ]);
-        
-        return new MessageResource($message);
+public function store(Request $request)
+{
+    $userId = Auth::id();
+    
+    if (!$userId) {
+        return response()->json(['error' => 'Unauthenticated'], 401);
     }
 
+    $request->validate([
+        'recipient_id' => 'required|integer|exists:users,id|different:sender_id',
+        'body' => 'required|string|max:1000',
+    ]);
+
+    $message = Message::create([
+        'sender_id' => $userId,
+        'recipient_id' => $request->recipient_id,
+        'body' => $request->body,
+    ]);
+
+   
+    broadcast(new MessageSent($message))->toOthers();
+
+    return new MessageResource($message);
+}
  
     // Other methods...
 

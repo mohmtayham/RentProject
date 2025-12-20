@@ -11,6 +11,7 @@ use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 
 class PropertyController extends Controller
@@ -268,48 +269,32 @@ public function destroy($id)
     ], 200);
 }
 
-/**
- * Add property to authenticated user's favorites
- */
+public function nearby(Request $request)
+    {
+        $request->validate([
+            'latitude'  => 'required|numeric',
+            'longitude' => 'required|numeric',
+            'radius'    => 'numeric|min:1|max:100', // كيلومترات
+        ]);
 
-//   public function addToFavorites($taskId)
-//     {
-//         try {
-//             Task::findOrFail($taskId);
-//             Auth::user()->favoriteTasks()->syncWithoutDetaching($taskId);
-//             return response()->json(['message' => 'Task added to favorites'], 200);
-//         } catch (ModelNotFoundException $e) {
-//             return response()->json(['error' => 'Task not found'], 404);
-//         } catch (Exception $e) {
-//             return response()->json(['error' => 'Something went wrong'], 500);
-//         }
-//     }
-//  public function user()
-//     {
-//         return $this->belongsTo(User::class);
-//     }
-//     public function categories()
-//     {
-//         return $this->belongsToMany(Category::class,'category_task');
-//     }
-//     public function favoriteByUser()
-//     {
-//         return $this->belongsToMany(User::class,'favorites');
-//     }
-//     public function profile()
-//     {
-//         return $this->hasOne(Profile::class);
-//     }
-//     public function tasks()
-//     {
-//         return $this->hasMany(Task::class);
-//     }
-//     public function favoriteTasks()
-//     {
-//         return $this->belongsToMany(Task::class,'favorites');
-//     }
-// }
+        $latitude  = $request->latitude;
+        $longitude = $request->longitude;
+        $radius    = $request->input('radius', 10); // افتراضي 10 كم
 
+        $apartments = Property::available()
+                               ->nearby($latitude, $longitude, $radius)
+                               ->get();
+
+        // إضافة المسافة بالكيلومترات بشكل جميل
+        $apartments->each(function ($apartment) {
+            $apartment->distance_text = number_format($apartment->distance, 2) . ' كم';
+        });
+
+        return response()->json([
+            'success' => true,
+            'data'    => $apartments
+        ]);
+    }
 
 public function addToFavorites(Request $request, $propertyId)
 {

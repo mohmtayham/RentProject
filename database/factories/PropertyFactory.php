@@ -19,6 +19,9 @@ class PropertyFactory extends Factory
             'is_available' => $this->faker->boolean(70),
             'note' => $this->faker->optional()->sentence(),
             'photo' => $this->faker->optional()->imageUrl(),
+            'latitude' => number_format($this->faker->latitude(), 8, '.', ''),
+            'longitude' => number_format($this->faker->longitude(), 8, '.', ''),
+            'views' => $this->faker->numberBetween(0, 5000),
         ];
     }
 
